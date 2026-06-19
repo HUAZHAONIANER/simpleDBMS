@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YCSQL-轻量级数据库管理系统</title>
+    <meta
+      name="description"
+      content="河北大学数信学院软件工程杨炜圣"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- 移除外部Monaco Editor脚本，改用webpack打包的版本 -->
+
+    <style>
+      :root {
+        --primary-bg: #0f172a;
+        --secondary-bg: #1e293b;
+        --accent-bg: #334155;
+        --primary-text: #f1f5f9;
+        --secondary-text: #cbd5e1;
+        --accent-text: #94a3b8;
+        --primary-color: #0891b2;
+        --secondary-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --border-color: #475569;
+        --hover-bg: #2d3748;
+        --selection-bg: #3b82f6;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Noto Sans SC",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: var(--primary-bg);
+        color: var(--primary-text);
+        overflow-x: hidden;
+        line-height: 1.6;
+      }
+
+      code,
+      pre,
+      .monospace {
+        font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+      }
+
+      /* 加载动画 */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+
+      .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 3px solid var(--accent-bg);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        margin-top: 20px;
+        color: var(--secondary-text);
+        font-size: 14px;
+        text-align: center;
+      }
+
+      /* 背景粒子效果 */
+      #particles-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.1;
+      }
+
+      /* 滚动条样式 */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--secondary-bg);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--accent-bg);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-color);
+      }
+
+      /* 选择文本样式 */
+      ::selection {
+        background: var(--selection-bg);
+        color: white;
+      }
+
+      /* 焦点样式 */
+      *:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
+
+      /* 按钮基础样式 */
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0e7490;
+      }
+
+      .btn-secondary {
+        background: var(--secondary-bg);
+        color: var(--primary-text);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: var(--hover-bg);
+      }
+
+      .btn-success {
+        background: var(--secondary-color);
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #059669;
+      }
+
+      .btn-danger {
+        background: var(--error-color);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+
+      /* 输入框基础样式 */
+      .input,
+      .textarea,
+      .select {
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: var(--primary-text);
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .input:focus,
+      .textarea:focus,
+      .select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+      }
+
+      .textarea {
+        resize: vertical;
+        min-height: 80px;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* 卡片样式 */
+      .card {
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        transition: all 0.2s ease;
+      }
+
+      .card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 工具提示 */
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-bg);
+        color: var(--primary-text);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 1000;
+        border: 1px solid var(--border-color);
+      }
+
+      .tooltip:hover::after {
+        opacity: 1;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        .btn {
+          padding: 6px 12px;
+          font-size: 13px;
+        }
+
+        .input,
+        .textarea,
+        .select {
+          padding: 6px 10px;
+          font-size: 13px;
+        }
+
+        .card {
+          padding: 12px;
+        }
+      }
+
+      /* 动画类 */
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .slide-in {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 加载动画 -->
+    <div id="loading" class="loading-container">
+      <div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">
+          <div>正在初始化 YCSQL...</div>
+          <div style="font-size: 12px; margin-top: 8px; opacity: 0.7">
+            加载存储引擎 | 初始化SQL解析器 | 构建Web界面
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 背景粒子效果 -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- 应用根节点 -->
+    <div id="root"></div>
+
+    <!-- 应用脚本将由 webpack 自动注入 -->
+
+    <!-- 错误处理 -->
+    <script>
+      window.addEventListener("error", function (e) {
+        console.error("全局错误:", e.error);
+        // 可以在这里添加错误上报逻辑
+      });
+
+      window.addEventListener("unhandledrejection", function (e) {
+        console.error("未处理的Promise拒绝:", e.reason);
+        // 可以在这里添加错误上报逻辑
+      });
+    </script>
+  </body>
+</html>
